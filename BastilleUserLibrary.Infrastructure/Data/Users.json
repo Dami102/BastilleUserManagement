@@ -1,0 +1,16 @@
+[
+  {
+    "FirstName": "Damilola",
+    "LastName": "Ebitigha",
+    "PhoneNumber": "0818365283",
+    "Address": "City: Akure , State: Lagos,StreetNumber: No 4,Country: Nigeria,",
+    "IsActive": false
+  },
+  {
+    "FirstName": "David",
+    "LastName": "Ebitigha",
+    "PhoneNumber": "0818365283",
+    "Address": "City: Akure , State: Lagos,StreetNumber: No 4,Country: Nigeria,",
+    "IsActive": false
+  }
+]
