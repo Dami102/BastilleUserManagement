@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BastilleUserLibrary.Infrastructure.Repositories
 {
-    public class UnitOfWork 
+    public class UnitOfWork : IUnitOfWork
     {
         private ApplicationDbContext _context { get; set; }
         private UserRepository _userRepository { get; set; }
@@ -16,7 +16,7 @@ namespace BastilleUserLibrary.Infrastructure.Repositories
         {
             _context = context;
         }
-     
+
         public IUserRepository UserRepository => _userRepository ?? new UserRepository(_context);
         public void Dispose()
         {

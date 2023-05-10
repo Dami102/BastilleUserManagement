@@ -1,5 +1,8 @@
-﻿using BastilleUserLibrary.Infrastructure;
+﻿using BastilleIUserLibrary.Domain.Enums;
+using BastilleUserLibrary.Infrastructure;
 using BastilleUserLibrary.Infrastructure.Repositories;
+using BastilleUserService.Core.DTOs.Request;
+using BastilleUserService.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -8,32 +11,43 @@ using System.Security.Claims;
 
 namespace BastilleUserService.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
+    
     public class AuthController : ControllerBase
     {
-        ApplicationDbContext _context;
-       /* public AuthController()
+        private readonly IAuthService _authService;
+
+        public AuthController(IAuthService authService)
         {
-        
-        }
-        [HttpPost]
-        [Route("register")]
-        public async Task<IActionResult> Register()
-        {
-            
-            UnitOfWork unit = new (_context);
-            var result = 
+            _authService = authService;
         }
 
-        
         [HttpPost]
-        [Route("login")]
-        public async Task<IActionResult> Login()
+        [Route("signUpBuyer")]
+        public async Task<IActionResult> SignUpBuyer([FromBody] RegistrationDTO request)
         {
-         
-        }*/
+            var result = await _authService.SignUp(request,UserRole.Buyer);
+            return Ok(result);
+        }
+        [HttpPost]
+        [Route("signUpSeller")]
+        public async Task<IActionResult> SignUpSeller([FromBody] RegistrationDTO request)
+        {
+            var result = await _authService.SignUp(request, UserRole.Seller);
+            return Ok(result);
+        }
 
-   
+        [HttpPost]
+        [Route("logIn")]
+        public async Task<IActionResult> LogIn([FromBody] LoginDTO request)
+        {
+            var result = await _authService.Login(request);
+            return Ok(result);
+        }
+
+
+
+
     }
 }
