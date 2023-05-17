@@ -20,7 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BastilleIUserLibrary\BastilleIUserLibrary.Domain.csproj" />
     <ProjectReference Include="..\BastilleUserLibrary.Infrastructure\BastilleUserLibrary.Infrastructure.csproj" />
+    <ProjectReference Include="..\BastilleUserService.Core\BastilleUserService.Core.csproj" />
   </ItemGroup>
 
 </Project>

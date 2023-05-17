@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BastilleIUserLibrary.Domain.Enums;
 using BastilleIUserLibrary.Domain.Model;
+using BastilleUserService.Core.DTOs;
 using BastilleUserService.Core.DTOs.Request;
 using BastilleUserService.Core.DTOs.Response;
 using BastilleUserService.Core.Interfaces;
@@ -95,11 +96,11 @@ namespace BastilleUserService.Core.Services
                 return APIResponse<LoginResponseDTO>.Fail("Inavlid user credential", (int)HttpStatusCode.BadRequest);
             }
 
-            if (!user.IsActive)
+            /*if (!user.IsActive)
             {
                 return APIResponse<LoginResponseDTO>.Fail("User's account is Deactivated", (int)HttpStatusCode.BadRequest);
 
-            }
+            }*/
 
             var refreshToken = _tokenService.GenerateRefreshToken();
           
@@ -112,6 +113,22 @@ namespace BastilleUserService.Core.Services
 
             _logger.LogInformation("User successfully logged in");
             return APIResponse<LoginResponseDTO>.Success("Login successful", response);
+        }
+
+        public async Task<ResponseDTO<bool>> AddAddress(AddressDTO address, string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return ResponseDTO<bool>.Fail("User not found", (int)HttpStatusCode.BadRequest);
+            }
+
+            user.Address = $"StreetNumber: {address.StreetNumber}, City: {address.City}, State: {address.State},  Country: {address.Country}";
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+                return ResponseDTO<bool>.Success("User address Added", true, (int)HttpStatusCode.Created);
+            else
+                return ResponseDTO<bool>.Fail("Service not available");
         }
     }
 }
