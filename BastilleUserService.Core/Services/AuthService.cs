@@ -8,12 +8,8 @@ using BastilleUserService.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Web;
 
 namespace BastilleUserService.Core.Services
 {
@@ -23,12 +19,14 @@ namespace BastilleUserService.Core.Services
         private readonly ILogger<AuthService> _logger;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        public AuthService(IServiceProvider serviceProvider, IMapper mapper, ILogger<AuthService> logger, ITokenService tokenService)
+        private readonly IEmailService _emailService;
+        public AuthService(IServiceProvider serviceProvider, IMapper mapper, ILogger<AuthService> logger, ITokenService tokenService, IEmailService emailService)
         {
             _userManager = serviceProvider.GetRequiredService<UserManager<User>>();
             _logger = logger;
             _mapper = mapper;
             _tokenService = tokenService;
+            _emailService=emailService;
         }
 
         public async Task<APIResponse<string>> SignUp(RegistrationDTO request, UserRole appUserRole)
@@ -57,6 +55,16 @@ namespace BastilleUserService.Core.Services
                 _logger.LogInformation("Error, when creating user");
                 return APIResponse<string>.Fail($"{createUser.Errors}", (int)HttpStatusCode.InternalServerError);
             }
+            var userFromDb = await _userManager.FindByEmailAsync(mappedUser.Email);
+            var token = await  _userManager.GenerateEmailConfirmationTokenAsync(userFromDb);
+            var uriBuilder = new UriBuilder("http://localhost:7287/ConfirmEmail");
+            var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+            query["token"] = token;
+            query["userId"] = userFromDb.Id;
+            uriBuilder.Query = query.ToString();
+            var urlString = uriBuilder.ToString();
+
+            _emailService.SendEmail(urlString, userFromDb.Email);
 
             _logger.LogInformation("Adding User Roles");
 
@@ -115,20 +123,91 @@ namespace BastilleUserService.Core.Services
             return APIResponse<LoginResponseDTO>.Success("Login successful", response);
         }
 
-        public async Task<ResponseDTO<bool>> AddAddress(AddressDTO address, string userId)
+        public async Task<APIResponse<bool>> AddAddress(AddressDTO address, string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return ResponseDTO<bool>.Fail("User not found", (int)HttpStatusCode.BadRequest);
+                return APIResponse<bool>.Fail("User not found", (int)HttpStatusCode.BadRequest);
             }
 
             user.Address = $"StreetNumber: {address.StreetNumber}, City: {address.City}, State: {address.State},  Country: {address.Country}";
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
-                return ResponseDTO<bool>.Success("User address Added", true, (int)HttpStatusCode.Created);
+                return APIResponse<bool>.Success("User address Added", true, (int)HttpStatusCode.Created);
             else
-                return ResponseDTO<bool>.Fail("Service not available");
+                return APIResponse<bool>.Fail("Service not available");
+        }
+
+        public async Task<APIResponse<string>> ConfirmEmail(ConfirmEmailDTO model)
+        {
+            var user = await _userManager.FindByIdAsync(model.Id);
+            if(user == null)
+            {
+                return APIResponse<string>.Fail("User does not Exist");
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, model.Token);
+
+            if (result.Succeeded)
+            {
+                return APIResponse<string>.Success("Email Confirmed", "");
+            }
+            return APIResponse<string>.Fail("Email Confirmation is not successful");
+        }
+
+        public async Task<APIResponse<string>> AddAdmin(RegistrationDTO model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if(user != null)
+            {
+                return APIResponse<string>.Fail("User does not Exist");
+            }
+
+            var mappedUser = _mapper.Map<User>(user);
+            mappedUser.Email = model.Email;
+            mappedUser.IsActive = true;
+
+            var createdResult = await _userManager.CreateAsync(mappedUser);
+            if (!createdResult.Succeeded)
+            {
+                return APIResponse<string>.Fail("User could not be created", (int)HttpStatusCode.InternalServerError);
+            }
+
+            var addAdminRole = await _userManager.AddToRoleAsync(mappedUser, UserRole.Admin.ToString());
+            if (!addAdminRole.Succeeded)
+            {
+                return APIResponse<string>.Fail("Error while adding Role", (int)HttpStatusCode.InternalServerError);
+            }
+
+            return APIResponse<string>.Success("Admin Created Successfully", mappedUser.Email);
+        }
+
+        public async Task<APIResponse<string>> ChangeUserRole(string email, UserRole userRole)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if(user == null)
+            {
+                return APIResponse<string>.Fail("User does not exist");
+            }
+            var role = await _userManager.GetRolesAsync(user);
+            var removeRole = await _userManager.RemoveFromRolesAsync(user, role);
+
+            if (!removeRole.Succeeded)
+            {
+                return APIResponse<string>.Fail("Roles could not be removed", (int)HttpStatusCode.InternalServerError);
+            }
+            if (!(userRole == UserRole.Buyer || userRole == UserRole.Admin || userRole == UserRole.Buyer))
+            {
+                return APIResponse<string>.Fail("Invalid Role");
+            }
+            var addRole = await _userManager.AddToRoleAsync(user, userRole.ToString());
+            if (!addRole.Succeeded)
+            {
+                return APIResponse<string>.Fail("Changeing Role failed", (int)HttpStatusCode.InternalServerError);
+            }
+            return APIResponse<string>.Success($"User {user.Email} Successfully changed to {userRole}", user.Email);
         }
     }
 }

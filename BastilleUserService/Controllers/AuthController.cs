@@ -7,6 +7,7 @@ using BastilleUserService.Core.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -30,14 +31,14 @@ namespace BastilleUserService.Controllers
         public async Task<IActionResult> SignUpBuyer([FromBody] RegistrationDTO request)
         {
             var result = await _authService.SignUp(request,UserRole.Buyer);
-            return Ok(result);
+            return StatusCode(result.StatusCode,result);
         }
         [HttpPost]
         [Route("signUpSeller")]
         public async Task<IActionResult> SignUpSeller([FromBody] RegistrationDTO request)
         {
             var result = await _authService.SignUp(request, UserRole.Seller);
-            return Ok(result);
+            return StatusCode(result.StatusCode,result);
         }
 
         [HttpPost]
@@ -45,7 +46,7 @@ namespace BastilleUserService.Controllers
         public async Task<IActionResult> LogIn([FromBody] LoginDTO request)
         {
             var result = await _authService.Login(request);
-            return Ok(result);
+            return StatusCode(result.StatusCode, result);
         }
 
 
@@ -63,6 +64,45 @@ namespace BastilleUserService.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
+        //Cofirm email update
 
+        [HttpPost]
+        [Route("ConfirmEmail")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> ConfirmEmail([FromQuery]ConfirmEmailDTO model)
+        {
+            var result = await _authService.ConfirmEmail(model);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPost]
+        [Route("AddAmin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "RequireAdminOnly")]
+        public async Task<IActionResult> AddAdmin([FromBody]RegistrationDTO model)
+        {
+            var result = await _authService.AddAdmin(model);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPatch]
+        [Route("ChangeUserRole")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "RequireAdminOnly")]
+        public async Task<IActionResult> ChangeRole([FromBody] ChangeUserRoleDTO model)
+        {
+            if(model.RoleName == "Admin")
+            {
+                var adminresult = await _authService.ChangeUserRole(model.Email, UserRole.Admin);
+                return StatusCode(adminresult.StatusCode, adminresult);
+            }
+            if (model.RoleName == "Buyer")
+            {
+                var buyerresult = await _authService.ChangeUserRole(model.Email, UserRole.Buyer);
+                return StatusCode(buyerresult.StatusCode, buyerresult);
+            }
+
+            var result = await _authService.ChangeUserRole(model.Email, UserRole.Seller);
+            return StatusCode(result.StatusCode, result);
+
+        }
     }
 }

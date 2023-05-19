@@ -15,9 +15,9 @@ namespace BastilleUserService.Extensions
             services.AddIdentity<User, IdentityRole>(x =>
             {
                 x.Password.RequiredLength = 5;
-                x.SignIn.RequireConfirmedEmail = true;
+                /*x.SignIn.RequireConfirmedEmail = true;*/
                 x.User.RequireUniqueEmail = true;
-                x.SignIn.RequireConfirmedEmail = true;
+               /* x.SignIn.RequireConfirmedEmail = true;*/
                 x.Password.RequireNonAlphanumeric = false;
                 x.Password.RequireUppercase= false;
                 x.Password.RequireLowercase= false;

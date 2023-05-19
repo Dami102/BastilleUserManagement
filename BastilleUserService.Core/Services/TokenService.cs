@@ -3,13 +3,9 @@ using BastilleUserService.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BastilleUserService.Core.Services
 {
@@ -26,7 +22,7 @@ namespace BastilleUserService.Core.Services
         public async Task<string> GenerateToken(User user)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:Token"]));
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Token"]));
             var claims = await GetAllValidClaims(user);
         
             
@@ -37,8 +33,8 @@ namespace BastilleUserService.Core.Services
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtConfig.GetSection("lifetime").Value)),
                 SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha512Signature),
-                Issuer = _configuration["jwt:Issuer"],
-                Audience = _configuration["jwt:Audience"]
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
             };
 
             var token = jwtTokenHandler.CreateToken(tokenDescriptor);
