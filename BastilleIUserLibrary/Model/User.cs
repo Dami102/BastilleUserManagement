@@ -10,5 +10,6 @@ namespace BastilleIUserLibrary.Domain.Model
         public string PhoneNumber { get; set; }
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
+        public string? PublicId { get; set; }
     }
 }
