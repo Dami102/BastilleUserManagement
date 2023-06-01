@@ -1,4 +1,5 @@
-﻿using BastilleUserService.Core.Interfaces;
+﻿using BastilleUserLibrary.Infrastructure.External_Services;
+using BastilleUserService.Core.Interfaces;
 using BastilleUserService.Core.Services;
 using BastilleUserService.Core.Utilities.Profiles;
 
@@ -13,6 +14,7 @@ namespace BastilleUserService.Extensions
             services.AddSingleton<IEmailService, EmailService>();
             services.AddAutoMapper(typeof(MappingProfiles));
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<ICloudinaryServices, CloudinaryServices>();
         }
     }
 }

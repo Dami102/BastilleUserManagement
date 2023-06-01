@@ -75,15 +75,7 @@ namespace BastilleUserService.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpPost]
-        [Route("AddAmin")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "RequireAdminOnly")]
-        public async Task<IActionResult> AddAdmin([FromBody]RegistrationDTO model)
-        {
-            var result = await _authService.AddAdmin(model);
-            return StatusCode(result.StatusCode, result);
-        }
-
+       
         [HttpPatch]
         [Route("ChangeUserRole")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "RequireAdminOnly")]
