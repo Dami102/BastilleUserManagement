@@ -95,7 +95,8 @@ namespace BastilleUserLibrary.Infrastructure.Extensions
                         FirstName = "Damilola",
                         LastName = "Ebitigha",
                         PhoneNumber = "09168965528",
-                        Address = "Lagos Nigeria"
+                        Address = "Lagos Nigeria",
+                        PublicId = ""
                     };
 
                     IdentityResult result = userManager.CreateAsync(adminUser, password).Result;

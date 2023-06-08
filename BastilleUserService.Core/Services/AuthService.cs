@@ -16,17 +16,23 @@ namespace BastilleUserService.Core.Services
     public class AuthService : IAuthService
     {
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly ILogger<AuthService> _logger;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
-        public AuthService(IServiceProvider serviceProvider, IMapper mapper, ILogger<AuthService> logger, ITokenService tokenService, IEmailService emailService)
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IRefreshTokenValidator _refreshTokenValidator;
+        public AuthService(IServiceProvider serviceProvider, IMapper mapper, ILogger<AuthService> logger, ITokenService tokenService, IEmailService emailService, IRefreshTokenRepository refreshTokenRepository, IRefreshTokenValidator refreshTokenValidator)
         {
             _userManager = serviceProvider.GetRequiredService<UserManager<User>>();
             _logger = logger;
             _mapper = mapper;
             _tokenService = tokenService;
             _emailService=emailService;
+            _signInManager = serviceProvider.GetRequiredService<SignInManager<User>>();
+            _refreshTokenRepository=refreshTokenRepository;
+            _refreshTokenValidator=refreshTokenValidator;
         }
 
         public async Task<APIResponse<string>> SignUp(RegistrationDTO request, UserRole appUserRole)
@@ -94,6 +100,13 @@ namespace BastilleUserService.Core.Services
         public async Task<APIResponse<LoginResponseDTO>> Login(LoginDTO request)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
+          /*  var signIn = await _signInManager.PasswordSignInAsync(request.Email, request.Password, false, false);
+
+            if(!signIn.Succeeded)
+            {
+                return APIResponse<LoginResponseDTO>.Fail("erorr", (int)HttpStatusCode.Unauthorized);
+            }*/
+
             if(user == null)
             {
                 return APIResponse<LoginResponseDTO>.Fail("User does not exist", (int)HttpStatusCode.BadRequest);
@@ -115,12 +128,71 @@ namespace BastilleUserService.Core.Services
             var response = new LoginResponseDTO()
             {
                 Id = user.Id,
+                Email = user.Email,
+                Token = await _tokenService.GenerateToken(user),
+                RefreshToken = refreshToken
+            };
+
+            RefreshToken refreshTokenDTO = new()
+            {
+                Token = refreshToken,
+                UserEmail = user.Email
+            };
+            await _refreshTokenRepository.Create(refreshTokenDTO);
+
+            _logger.LogInformation("User successfully logged in");
+            return APIResponse<LoginResponseDTO>.Success("LoggedIn", response);
+        }
+
+
+        public async Task<APIResponse<LoginResponseDTO>> Refresh(RefreshRequest refreshRequest)
+        {
+
+            bool isValidRefreshToken = _refreshTokenValidator.Validate(refreshRequest.RefreshToken);
+            if (!isValidRefreshToken)
+            {
+                return APIResponse<LoginResponseDTO>.Fail("UnAuthorised");
+            }
+
+
+            RefreshToken refreshTokenDTO = await _refreshTokenRepository.GetRefreshToken(refreshRequest.RefreshToken);
+            if (refreshTokenDTO == null)
+            {
+                return APIResponse<LoginResponseDTO>.Fail("USer is not Logged In");
+            }
+
+            var user = await _userManager.FindByEmailAsync(refreshTokenDTO.UserEmail);
+
+            if (user == null)
+            {
+                APIResponse<LoginResponseDTO>.Fail("User Not Found");
+            }
+
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            var response = new LoginResponseDTO()
+            {
+                Id = user.Id,
+                Email = user.Email,
                 Token = await _tokenService.GenerateToken(user),
                 RefreshToken = refreshToken
             };
 
             _logger.LogInformation("User successfully logged in");
-            return APIResponse<LoginResponseDTO>.Success("Login successful", response);
+            return APIResponse<LoginResponseDTO>.Success("LoggedIn", response);
+
+        }
+
+        public async Task<APIResponse<string>> LogOut(string email)
+        {
+            if(email is null)
+            {
+                return APIResponse<string>.Fail("User not Found");
+            }
+
+            await _refreshTokenRepository.DeleteAll(email);
+
+            return APIResponse<string>.Success("Logged out Successfully", "");
         }
 
         public async Task<APIResponse<bool>> AddAddress(AddressDTO address, string userId)

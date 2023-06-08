@@ -1,13 +1,12 @@
 ﻿using BastilleIUserLibrary.Domain.Enums;
-using BastilleUserLibrary.Infrastructure;
-using BastilleUserLibrary.Infrastructure.Repositories;
+using BastilleIUserLibrary.Domain.Model;
 using BastilleUserService.Core.DTOs;
 using BastilleUserService.Core.DTOs.Request;
 using BastilleUserService.Core.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -20,7 +19,7 @@ namespace BastilleUserService.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-
+       
         public AuthController(IAuthService authService)
         {
             _authService = authService;
@@ -95,6 +94,38 @@ namespace BastilleUserService.Controllers
             var result = await _authService.ChangeUserRole(model.Email, UserRole.Seller);
             return StatusCode(result.StatusCode, result);
 
+        }
+
+        [HttpGet]
+        [Route("test")]
+        public IActionResult Test()
+        {
+            return StatusCode(200, "dkdk");
+        }
+
+        [HttpPost]
+        [Route("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest refreshRequest)
+        {
+            /*var userId = HttpContext.User.Claims.FirstOrDefault(i => i.Type == "Id").Value;*/
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+           var response = await _authService.Refresh(refreshRequest);
+            return StatusCode(response.StatusCode, response);
+
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("LogOut")]
+        public async Task<IActionResult> Logout()
+        {
+            var userEmail = HttpContext.User.Claims.FirstOrDefault(i => i.Type == ClaimTypes.Email).Value;
+            var response = await _authService.LogOut(userEmail);
+
+            return StatusCode(response.StatusCode, response);   
         }
     }
 }

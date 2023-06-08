@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BastilleUserService.Core.DTOs.Response
+namespace BastilleUserService.Core.DTOs.Request
 {
-    public class LoginResponseDTO
+    public class RefreshToken
     {
         public string Id { get; set; }
-        public string Email { get; set; }
         public string Token { get; set; }
-        public string RefreshToken { get; set; }
+        public string UserEmail { get; set; }
     }
 }
