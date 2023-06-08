@@ -45,7 +45,23 @@ namespace BastilleUserService.Core.Services
 
         public string GenerateRefreshToken()
         {
-            return Guid.NewGuid().ToString();
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:RefreshToken"]));
+
+            var jwtConfig = _configuration.GetSection("Jwt");
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+ 
+                Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtConfig.GetSection("refreshTime").Value)),
+                SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha512Signature),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
+            };
+
+            var refreshToken = jwtTokenHandler.CreateToken(tokenDescriptor);
+            var jwtRefreshToken = jwtTokenHandler.WriteToken(refreshToken);
+            return jwtRefreshToken;
         }
         private async Task<List<Claim>> GetAllValidClaims(User user)
         {

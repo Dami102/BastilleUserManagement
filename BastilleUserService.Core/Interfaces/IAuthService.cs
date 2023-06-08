@@ -13,5 +13,7 @@ namespace BastilleUserService.Core.Interfaces
         Task<APIResponse<string>> ConfirmEmail(ConfirmEmailDTO model);
         Task<APIResponse<string>> AddAdmin(RegistrationDTO model);
         Task<APIResponse<string>> ChangeUserRole(string email, UserRole userRole);
+        Task<APIResponse<LoginResponseDTO>> Refresh(RefreshRequest refreshRequest);
+        Task<APIResponse<string>> LogOut(string email);
     }
 }
