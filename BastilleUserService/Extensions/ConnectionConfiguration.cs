@@ -2,7 +2,6 @@
 using BastilleUserLibrary.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.CompilerServices;
 
 namespace BastilleUserService.Extensions
 {

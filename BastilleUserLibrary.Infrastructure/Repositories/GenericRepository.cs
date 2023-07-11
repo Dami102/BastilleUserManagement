@@ -1,10 +1,5 @@
 ﻿using BastilleUserService.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BastilleUserLibrary.Infrastructure.Repositories
 {
@@ -38,6 +33,11 @@ namespace BastilleUserLibrary.Infrastructure.Repositories
         {
             _db.RemoveRange(entities);
         }
+
+        /*public void FIndById(string id)
+        {
+            _db.f
+        }*/
 
         public void Update(T entity)
         {

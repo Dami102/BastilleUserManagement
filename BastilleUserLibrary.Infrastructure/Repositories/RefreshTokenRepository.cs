@@ -23,7 +23,9 @@ namespace BastilleUserLibrary.Infrastructure.Repositories
 
         public Task DeleteAll(string userEmail)
         {
-            _refreshTokens.RemoveAll(x => x.UserEmail == userEmail);
+            _refreshTokens.RemoveAll(x => x.UserEmail == userEmail
+            
+            );
             return Task.CompletedTask;
         }
     }

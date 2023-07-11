@@ -44,8 +44,9 @@ namespace BastilleUserService.Controllers
         [Route("logIn")]
         public async Task<IActionResult> LogIn([FromBody] LoginDTO request)
         {
+            var usereaId = HttpContext.User.Identities.First();
             var result = await _authService.Login(request);
-            return StatusCode(result.StatusCode, result);
+            return StatusCode(result.StatusCode,result);
         }
 
 
@@ -55,6 +56,7 @@ namespace BastilleUserService.Controllers
         public async Task<IActionResult> AddAddress([FromBody] AddressDTO model)
         {
             var userId = HttpContext.User.Claims.FirstOrDefault(i => i.Type == "Id").Value;
+            
             if (userId== null)
             {
                 return BadRequest();

@@ -1,17 +1,7 @@
-﻿using BastilleIUserLibrary.Domain.Enums;
-using BastilleIUserLibrary.Domain.Model;
+﻿using BastilleIUserLibrary.Domain.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BastilleUserLibrary.Infrastructure.Extensions
 {

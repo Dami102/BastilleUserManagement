@@ -1,7 +1,5 @@
-using BastilleUserLibrary.Infrastructure;
 using BastilleUserLibrary.Infrastructure.Extensions;
 using BastilleUserService.Extensions;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -16,7 +14,13 @@ builder.Services.AddRegisteredServices();
 builder.Services.AddSwaggerConfiguration();
 builder.Services.AddAuthenticationExtension(configuration);
 builder.Services.AddAuthorizationExtension();
-
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "Bastille";
+    options.Cookie.Path= "/";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+});
 var app = builder.Build();
 
 //Seed the database
@@ -34,7 +38,11 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+    Secure = CookieSecurePolicy.SameAsRequest,
+    MinimumSameSitePolicy = SameSiteMode.None
+});
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.UseAuthentication();

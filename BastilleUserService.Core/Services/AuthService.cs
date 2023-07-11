@@ -93,30 +93,39 @@ namespace BastilleUserService.Core.Services
 
             _logger.LogInformation("User Created");
 
-            return APIResponse<string>.Success("You have scuussefully signedUp", $"{request.Email}", (int)HttpStatusCode.Created);
+            LoginDTO login = new()
+            {
+                Email = request.Email,
+                Password = request.Password
+            };
+
+            var loginCall = await  Login(login);
+            await _signInManager.SignInAsync(userFromDb, false);
+            return APIResponse<string>.Success("You have scuussefully signedUp",loginCall?.Data.ToString(), (int)HttpStatusCode.Created);
 
         }
 
         public async Task<APIResponse<LoginResponseDTO>> Login(LoginDTO request)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
-          /*  var signIn = await _signInManager.PasswordSignInAsync(request.Email, request.Password, false, false);
 
-            if(!signIn.Succeeded)
-            {
-                return APIResponse<LoginResponseDTO>.Fail("erorr", (int)HttpStatusCode.Unauthorized);
-            }*/
-
-            if(user == null)
+            if (user == null)
             {
                 return APIResponse<LoginResponseDTO>.Fail("User does not exist", (int)HttpStatusCode.BadRequest);
             }
 
-            if(!await _userManager.CheckPasswordAsync(user, request.Password))
+            var signIn = await _signInManager.PasswordSignInAsync(request.Email, request.Password, false, false);
+   
+            if (!signIn.Succeeded)
+            {
+                return APIResponse<LoginResponseDTO>.Fail("erorr", (int)HttpStatusCode.Unauthorized);
+            }
+
+          /*  if(!await _userManager.CheckPasswordAsync(user, request.Password))
             {
                 return APIResponse<LoginResponseDTO>.Fail("Inavlid user credential", (int)HttpStatusCode.BadRequest);
             }
-
+*/
             /*if (!user.IsActive)
             {
                 return APIResponse<LoginResponseDTO>.Fail("User's account is Deactivated", (int)HttpStatusCode.BadRequest);
@@ -158,7 +167,7 @@ namespace BastilleUserService.Core.Services
             RefreshToken refreshTokenDTO = await _refreshTokenRepository.GetRefreshToken(refreshRequest.RefreshToken);
             if (refreshTokenDTO == null)
             {
-                return APIResponse<LoginResponseDTO>.Fail("USer is not Logged In");
+                return APIResponse<LoginResponseDTO>.Fail("User is not Logged In");
             }
 
             var user = await _userManager.FindByEmailAsync(refreshTokenDTO.UserEmail);
@@ -189,7 +198,9 @@ namespace BastilleUserService.Core.Services
             {
                 return APIResponse<string>.Fail("User not Found");
             }
-
+          
+         /*   var signed = await _signInManager.IsSignedIn();*/
+            await _signInManager.SignOutAsync();
             await _refreshTokenRepository.DeleteAll(email);
 
             return APIResponse<string>.Success("Logged out Successfully", "");
